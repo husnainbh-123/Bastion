@@ -6,6 +6,9 @@
 # Each reference engine plays ROUNDS game pairs (both colours from the same
 # opening). The performance rating against each opponent is its rating plus the
 # Elo difference fastchess reports. Uses a balanced opening book (BOOK).
+#
+# Every engine gets the same 30 ms move overhead: some engines default to 100 ms,
+# which is a real handicap at fast time controls.
 set -euo pipefail
 engine=$1; rounds=$2; shift 2
 : "${FASTCHESS:?set FASTCHESS to the fastchess binary}" "${BOOK:?set BOOK to an opening book}"
@@ -15,7 +18,7 @@ for ref in "$@"; do args+=(-engine cmd="$ref" name="$(basename "$ref")"); done
 "$FASTCHESS" \
   -tournament gauntlet -seeds 1 \
   -engine cmd="$engine" name=bastion "${args[@]}" \
-  -each tc="${TC:-8+0.08}" option.Hash=16 \
+  -each tc="${TC:-8+0.08}" option.Hash=16 option.Threads=1 "option.Move Overhead=30" \
   -openings file="$BOOK" format="$format" order=random \
   -rounds "$rounds" -repeat -concurrency "${CONCURRENCY:-$(nproc)}" -recover \
   -pgnout file="gauntlet-$(date +%Y%m%d-%H%M%S).pgn"
