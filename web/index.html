@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bastion Chess Engine</title>
+<meta name="description" content="Play Bastion, a chess engine written from scratch in C++ and compiled to WebAssembly, right in your browser.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <symbol id="pP" viewBox="0 0 100 100"><circle class="b" cx="50" cy="30" r="12.5"/> <rect class="b" x="35.5" y="45.5" width="29" height="6.5" rx="3.2"/> <path class="b" d="M40.5 52 C40.5 63 36 71 31 77.5 H69 C64 71 59.5 63 59.5 52 Z"/><path class="b" d="M24 77.5 H76 V85 H24 Z"/><rect class="b" x="16.5" y="85" width="67" height="8.5" rx="3"/></symbol>
+  <symbol id="pR" viewBox="0 0 100 100"><path class="b" d="M26 18 H37 V27 H44.5 V18 H55.5 V27 H63 V18 H74 V38 H26 Z"/> <path class="b" d="M32.5 38 H67.5 L64.5 71 H35.5 Z"/> <rect class="b" x="30" y="71" width="40" height="6.5" rx="2"/> <rect class="f" x="46.5" y="46" width="7" height="14" rx="3.5"/><path class="b" d="M24 77.5 H76 V85 H24 Z"/><rect class="b" x="16.5" y="85" width="67" height="8.5" rx="3"/></symbol>
+  <symbol id="pB" viewBox="0 0 100 100"><circle class="b" cx="50" cy="13" r="5.5"/> <path class="b" d="M50 19.5 C63 29 67.5 41 63.5 51.5 C61 57.5 56 60.5 50 60.5 C44 60.5 39 57.5 36.5 51.5 C32.5 41 37 29 50 19.5 Z"/> <path class="d" d="M55.5 30 L45 44.5"/> <rect class="b" x="36" y="60.5" width="28" height="6.5" rx="3.2"/> <path class="b" d="M42 67 C42 72.5 37.5 75.5 32 77.5 H68 C62.5 75.5 58 72.5 58 67 Z"/><path class="b" d="M24 77.5 H76 V85 H24 Z"/><rect class="b" x="16.5" y="85" width="67" height="8.5" rx="3"/></symbol>
+  <symbol id="pN" viewBox="0 0 100 100"><path class="b" d="M31 77.5 C31.5 69 35 63.5 41.5 57 L40 50.5 C35.5 53 30.5 55 25 54 C19.5 53 17.5 48.5 20 44.5 L32.5 27 C36.5 22.5 41.5 20.5 46.5 19.5 L50.5 9.5 L57 13.5 C67.5 19.5 74 32.5 74 48.5 C74 60.5 72 70 70.5 77.5 Z"/> <circle class="f" cx="39.5" cy="31.5" r="2.8"/> <path class="d" d="M58.5 19.5 C64.5 26 67.5 35 67 45"/><path class="b" d="M24 77.5 H76 V85 H24 Z"/><rect class="b" x="16.5" y="85" width="67" height="8.5" rx="3"/></symbol>
+  <symbol id="pQ" viewBox="0 0 100 100"><circle class="b" cx="18.5" cy="27" r="4.6"/><circle class="b" cx="33.5" cy="17" r="4.6"/><circle class="b" cx="50" cy="12.5" r="4.6"/><circle class="b" cx="66.5" cy="17" r="4.6"/><circle class="b" cx="81.5" cy="27" r="4.6"/> <path class="b" d="M20.5 31 L33.5 59 H66.5 L79.5 31 L63 45.5 L66 21.5 L56 42.5 L50 17 L44 42.5 L34 21.5 L37 45.5 Z"/> <rect class="b" x="31.5" y="59" width="37" height="6.5" rx="3.2"/> <path class="b" d="M38 65.5 C38 71.5 34 75 29.5 77.5 H70.5 C66 75 62 71.5 62 65.5 Z"/><path class="b" d="M24 77.5 H76 V85 H24 Z"/><rect class="b" x="16.5" y="85" width="67" height="8.5" rx="3"/></symbol>
+  <symbol id="pK" viewBox="0 0 100 100"><path class="b" d="M46 5 H54 V12 H61 V19.5 H54 V27.5 H46 V19.5 H39 V12 H46 Z"/> <path class="b" d="M50 27.5 C66 27.5 77 35.5 73 47.5 L67 59.5 H33 L27 47.5 C23 35.5 34 27.5 50 27.5 Z"/> <path class="d" d="M35 46 C44 42.5 56 42.5 65 46"/> <rect class="b" x="31.5" y="59.5" width="37" height="6.5" rx="3.2"/> <path class="b" d="M37.5 66 C37.5 72 33.5 75.5 29 77.5 H71 C66.5 75.5 62.5 72 62.5 66 Z"/><path class="b" d="M24 77.5 H76 V85 H24 Z"/><rect class="b" x="16.5" y="85" width="67" height="8.5" rx="3"/></symbol>
+</svg>
+
+<header class="site-header">
+  <a class="brand" href="#play">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M1.5 1.5 L11 3.6 V7 H21 V3.6 L30.5 1.5 L28.4 11 H25 V21 H28.4 L30.5 30.5 L21 28.4 V25 H11 V28.4 L1.5 30.5 L3.6 21 H7 V11 H3.6 Z"/><rect x="12" y="12" width="8" height="8"/></svg>
+    <span>Bastion</span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#how">How it works</a>
+    <a href="#strength">Strength</a>
+    <a href="https://github.com/husnainbh-123/Bastion">Source code</a>
+  </nav>
+</header>
+
+<main>
+  <section id="play" class="play" aria-labelledby="play-title">
+    <div class="board-column">
+      <div class="fort">
+        <svg class="walls" viewBox="0 0 1000 1000" aria-hidden="true">
+          <g class="fort-wide">
+            <path class="wall" fill-rule="evenodd" d="M70 70H930V930H70Z M110 110V890H890V110Z"/>
+            <polygon class="wall" points="240,70 240,20 0,0 20,240 70,240 70,70"/>
+            <polygon class="wall" points="760,70 760,20 1000,0 980,240 930,240 930,70"/>
+            <polygon class="wall" points="760,930 760,980 1000,1000 980,760 930,760 930,930"/>
+            <polygon class="wall" points="240,930 240,980 0,1000 20,760 70,760 70,930"/>
+            <rect class="cordon" x="104" y="104" width="792" height="792"/>
+            <text class="coord coord-file" x="158.75" y="910" font-size="24">a</text>
+            <text class="coord coord-file" x="256.25" y="910" font-size="24">b</text>
+            <text class="coord coord-file" x="353.75" y="910" font-size="24">c</text>
+            <text class="coord coord-file" x="451.25" y="910" font-size="24">d</text>
+            <text class="coord coord-file" x="548.75" y="910" font-size="24">e</text>
+            <text class="coord coord-file" x="646.25" y="910" font-size="24">f</text>
+            <text class="coord coord-file" x="743.75" y="910" font-size="24">g</text>
+            <text class="coord coord-file" x="841.25" y="910" font-size="24">h</text>
+            <text class="coord coord-rank" x="910" y="158.75" font-size="24">8</text>
+            <text class="coord coord-rank" x="910" y="256.25" font-size="24">7</text>
+            <text class="coord coord-rank" x="910" y="353.75" font-size="24">6</text>
+            <text class="coord coord-rank" x="910" y="451.25" font-size="24">5</text>
+            <text class="coord coord-rank" x="910" y="548.75" font-size="24">4</text>
+            <text class="coord coord-rank" x="910" y="646.25" font-size="24">3</text>
+            <text class="coord coord-rank" x="910" y="743.75" font-size="24">2</text>
+            <text class="coord coord-rank" x="910" y="841.25" font-size="24">1</text>
+          </g>
+          <g class="fort-compact">
+            <path class="wall" fill-rule="evenodd" d="M46 46H954V954H46Z M80 80V920H920V80Z"/>
+            <polygon class="wall" points="200,46 200,6 0,0 6,200 46,200 46,46"/>
+            <polygon class="wall" points="800,46 800,6 1000,0 994,200 954,200 954,46"/>
+            <polygon class="wall" points="800,954 800,994 1000,1000 994,800 954,800 954,954"/>
+            <polygon class="wall" points="200,954 200,994 0,1000 6,800 46,800 46,954"/>
+            <rect class="cordon" x="74" y="74" width="852" height="852"/>
+            <text class="coord coord-file" x="132.5" y="937" font-size="26">a</text>
+            <text class="coord coord-file" x="237.5" y="937" font-size="26">b</text>
+            <text class="coord coord-file" x="342.5" y="937" font-size="26">c</text>
+            <text class="coord coord-file" x="447.5" y="937" font-size="26">d</text>
+            <text class="coord coord-file" x="552.5" y="937" font-size="26">e</text>
+            <text class="coord coord-file" x="657.5" y="937" font-size="26">f</text>
+            <text class="coord coord-file" x="762.5" y="937" font-size="26">g</text>
+            <text class="coord coord-file" x="867.5" y="937" font-size="26">h</text>
+            <text class="coord coord-rank" x="937" y="132.5" font-size="26">8</text>
+            <text class="coord coord-rank" x="937" y="237.5" font-size="26">7</text>
+            <text class="coord coord-rank" x="937" y="342.5" font-size="26">6</text>
+            <text class="coord coord-rank" x="937" y="447.5" font-size="26">5</text>
+            <text class="coord coord-rank" x="937" y="552.5" font-size="26">4</text>
+            <text class="coord coord-rank" x="937" y="657.5" font-size="26">3</text>
+            <text class="coord coord-rank" x="937" y="762.5" font-size="26">2</text>
+            <text class="coord coord-rank" x="937" y="867.5" font-size="26">1</text>
+          </g>
+        </svg>
+        <div class="gauge" id="gauge" role="meter" aria-label="Evaluation, White's share" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="gauge-fill" id="gauge-fill"></div>
+        </div>
+        <div class="board" id="board" tabindex="0" role="application"
+             aria-label="Chess board. Use the arrow keys to move between squares, and Enter to pick up and put down a piece.">
+          <div class="squares"></div>
+          <div class="pieces"></div>
+          <svg class="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg>
+          <div class="promotion" id="promotion" role="dialog" aria-label="Choose a piece to promote to" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h1 id="play-title">Play against Bastion</h1>
+      <p class="lede">Bastion is a chess engine written from scratch in C++. On this page it runs as WebAssembly inside your browser, so every move it plays is calculated on your own device.</p>
+
+      <p class="status" id="status" aria-live="polite">Loading the engine…</p>
+
+      <div class="readout" id="readout" data-empty="true">
+        <p class="verdict"><span class="eval" id="r-eval">–</span> <span id="r-verdict"></span></p>
+        <dl class="stats">
+          <div><dt>Search depth</dt><dd id="r-depth">–</dd></div>
+          <div><dt>Positions searched</dt><dd id="r-nodes">–</dd></div>
+          <div><dt>Speed</dt><dd id="r-speed">–</dd></div>
+        </dl>
+        <p class="pv" id="pv"></p>
+      </div>
+
+      <div class="moves-block">
+        <h2 class="small-heading" id="moves-title">Moves</h2>
+        <p class="empty-note" id="moves-empty">No moves yet.</p>
+        <ol class="moves" id="moves" aria-labelledby="moves-title"></ol>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="button" id="undo">Take back</button>
+        <button type="button" class="button" id="flip">Flip board</button>
+        <button type="button" class="button" id="copy-pgn">Copy PGN</button>
+      </div>
+      <textarea class="copy-fallback" id="copy-fallback" rows="5" aria-label="Game in PGN format" hidden></textarea>
+
+      <form class="setup" id="setup" onsubmit="return false">
+        <div class="field">
+          <label for="level">Strength: <strong id="level-name">Master</strong></label>
+          <input type="range" id="level" min="1" max="8" step="1" value="7" aria-describedby="level-about">
+          <p class="hint" id="level-about"></p>
+        </div>
+        <fieldset class="field color-choice">
+          <legend>Play as</legend>
+          <label><input type="radio" name="color" id="color-w" value="w" checked> White</label>
+          <label><input type="radio" name="color" id="color-b" value="b"> Black</label>
+        </fieldset>
+        <button type="button" class="button primary" id="new-game">New game</button>
+        <label class="check"><input type="checkbox" id="show-thinking" checked> Show the line Bastion expects while it thinks</label>
+      </form>
+      <p class="visually-hidden" id="announcer" aria-live="assertive"></p>
+    </div>
+  </section>
+
+  <section id="how" class="how" aria-labelledby="how-title">
+    <h2 id="how-title">How Bastion works</h2>
+    <p class="section-lede">A chess engine answers one question over and over: which move is best here? Bastion does it in four parts, each built and tested on its own.</p>
+
+    <div class="topic">
+      <div class="topic-text">
+        <h3>Representing the board</h3>
+        <p>Positions are stored as bitboards: 64-bit integers with one bit per square, one for each piece type and colour. Questions like “which squares does this knight attack?” become a table lookup, and moves for a whole group of pieces come from a single bit shift. Rooks, bishops and queens use magic bitboards, a perfect-hashing trick that turns the pieces in a slider’s way into an index into a table of precomputed attacks.</p>
+        <p>The move generator is verified with perft, which counts every position reachable to a fixed depth. Bastion matches the published counts for 27 test positions, over 800 million positions in total, including the awkward cases: castling through check, pinned pieces, en passant captures that expose the king, and promotions.</p>
+      </div>
+      <figure class="topic-figure bitboard-figure">
+        <div class="bitboard" aria-hidden="true"><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="on">1</span><span >0</span><span class="on">1</span><span >0</span><span >0</span><span class="dark">0</span><span >0</span><span class="on">1</span><span >0</span><span class="dark">0</span><span >0</span><span class="on">1</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span class="knight">N</span><span class="dark">0</span><span >0</span><span >0</span><span class="dark">0</span><span >0</span><span class="on">1</span><span >0</span><span class="dark">0</span><span >0</span><span class="on">1</span><span class="dark">0</span><span >0</span><span class="dark">0</span><span >0</span><span class="on">1</span><span >0</span><span class="on">1</span><span >0</span></div>
+        <figcaption>The squares a knight on f3 attacks, as one bitboard: <code>0x0000005088008850</code>.</figcaption>
+      </figure>
+    </div>
+
+    <div class="topic">
+      <div class="topic-text">
+        <h3>Searching for the best move</h3>
+        <p>Bastion looks ahead with alpha-beta search, deepening one step at a time until its time runs out. A transposition table remembers positions it has already searched, and a quiescence search follows captures to the end so that it never judges a position in the middle of an exchange.</p>
+        <p>The tree of possible games grows about thirty times wider with every half-move, so most of the engineering goes into deciding what not to search. Each technique in the table was measured by playing Bastion against a copy of itself with that technique switched off: 200 games each, at a fixed 20,000 positions per move so that only the quality of the search counts. The ± figures are 95% error margins.</p>
+      </div>
+      <figure class="topic-figure">
+        <div class="table-wrap">
+          <table class="ablation">
+            <caption>Strength lost when one technique is switched off</caption>
+            <thead><tr><th scope="col">Technique</th><th scope="col">What it does</th><th scope="col" class="num">Elo</th></tr></thead>
+            <tbody id="ablation-rows"><tr><td>History ordering</td><td>Tries moves that worked elsewhere first</td><td class="num"><strong>-238</strong> <span class="margin">± 51</span></td></tr><tr><td>Late move reductions</td><td>Searches moves late in the ordering less deeply</td><td class="num"><strong>-151</strong> <span class="margin">± 46</span></td></tr><tr><td>Reverse futility pruning</td><td>Stops early when far ahead at low depth</td><td class="num"><strong>-81</strong> <span class="margin">± 38</span></td></tr><tr><td>Singular extensions</td><td>Searches a clearly best move one step deeper</td><td class="num"><strong>-56</strong> <span class="margin">± 39</span></td></tr><tr><td>Late move pruning</td><td>Stops trying quiet moves after enough have failed</td><td class="num"><strong>-45</strong> <span class="margin">± 38</span></td></tr><tr><td>Null move pruning</td><td>Skips a branch when even passing a move would still be good enough</td><td class="num"><strong>-26</strong> <span class="margin">± 37</span></td></tr><tr><td>Futility pruning</td><td>Skips quiet moves that cannot catch up at low depth</td><td class="num"><strong>-7</strong> <span class="margin">± 36</span></td></tr></tbody>
+          </table>
+        </div>
+      </figure>
+    </div>
+
+    <div class="topic">
+      <div class="topic-text">
+        <h3>Judging a position</h3>
+        <p>When the search stops, an evaluation function scores the position with 564 weights covering material, piece placement, mobility, pawn structure, passed pawns, king safety and threats. Each weight has a middlegame and an endgame value, blended by how much material is left.</p>
+        <p>The weights were learned rather than set by hand. Bastion played 11,978 games against itself, and a tuner adjusted every weight with gradient descent so that the evaluation predicts the results of 1,024,029 positions from those games as well as possible. In 140 test games the tuned version scored 80% against the original, a gain of 237 ± 51 Elo.</p>
+      </div>
+      <figure class="topic-figure"><div class="table-wrap"><table class="learned"><caption>A few of the learned weights, in hundredths of a pawn</caption><thead><tr><th scope="col">Feature</th><th scope="col" class="num">Middlegame</th><th scope="col" class="num">Endgame</th></tr></thead><tbody><tr><td>Bishop pair</td><td class="num">+10</td><td class="num">+25</td></tr><tr><td>Knight on an outpost</td><td class="num">+24</td><td class="num">+15</td></tr><tr><td>Rook on the seventh rank</td><td class="num">+14</td><td class="num">+13</td></tr><tr><td>Enemy piece left undefended</td><td class="num">+17</td><td class="num">+22</td></tr><tr><td>Isolated pawn</td><td class="num">-3</td><td class="num">-12</td></tr><tr><td>No pawn in front of your king</td><td class="num">-23</td><td class="num">+2</td></tr><tr><td>Having the move</td><td class="num">+13</td><td class="num">+9</td></tr></tbody></table></div></figure>
+    </div>
+
+    <div class="topic">
+      <div class="topic-text">
+        <h3>Testing every change</h3>
+        <p>Changes are judged by games, not intuition. The project’s test scripts run sequential probability ratio tests, which keep playing until the result is statistically clear and then stop. Strength is reported as Elo, where a 100 point gap means the stronger side scores about 64%.</p>
+        <p>On every push, continuous integration builds Bastion on Linux, Windows and macOS, runs the perft and unit tests, rebuilds with AddressSanitizer and UndefinedBehaviorSanitizer, and fuzzes the FEN and UCI parsers, the two places where untrusted input reaches the engine.</p>
+      </div>
+      <figure class="topic-figure">
+        <dl class="facts">
+          <div><dt>Positions counted by the perft suite</dt><dd>801,837,719</dd></div>
+          <div><dt>Move generation speed (perft, one core)</dt><dd>over 100 million positions a second</dd></div>
+          <div><dt>Search speed (one thread)</dt><dd>1.5 million positions a second</dd></div>
+          <div><dt>WebAssembly engine size</dt><dd>313 KB</dd></div>
+        </dl>
+      </figure>
+    </div>
+
+    <div class="topic">
+      <div class="topic-text">
+        <h3>Playing in your browser</h3>
+        <p>For this page the same C++ code is compiled to WebAssembly and runs in a Web Worker, so the page stays responsive while Bastion thinks. The legal moves, move notation and checkmate detection you see here all come from the engine itself, so the browser and the desktop engine share one set of chess rules.</p>
+        <p>The weaker levels limit how far ahead Bastion looks and add noise to its judgement, which makes its mistakes look more human than random blunders would.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="strength" class="strength" aria-labelledby="strength-title">
+    <h2 id="strength-title">How strong is it?</h2>
+    <div class="strength-body">
+      <div class="strength-text">
+        <p>Bastion's rating was estimated from games against reference engines with known ratings: the open-source engine Stash, and Stockfish held back to fixed skill levels. Across 160 games it performed at about <strong>2867</strong> on the CCRL blitz scale, with a 95% confidence interval of 2817 to 2916.</p>
+        <p>That is well above the 2500 the project aimed for. Engine ratings come from games between engines, so they are not directly comparable with human ratings.</p>
+        <p class="hint">The two kinds of reference disagree: Bastion performed at about 2985 against Stash and about 2801 against the Stockfish levels. Stockfish's levels search to a fixed depth, so unlike Stash and Bastion they lose little strength at a fast time control. A check points that way: here level 11 scored 75% against Stash 25, where the ratings predict 66%, so the Stockfish-based figure is probably the low one. The reference ratings come from the data Stockfish's developers used to calibrate its skill levels, and carry their own uncertainty of roughly 100 Elo.</p>
+        <p class="hint">Games were played at 8 seconds plus 0.08 seconds per move for each side, with one thread and balanced openings. Full results are in the <a href="https://github.com/husnainbh-123/Bastion/blob/main/docs/TESTING.md">testing notes</a>.</p>
+      </div>
+      <figure class="strength-figure">
+        <svg class="chart" viewBox="0 0 640 280" role="img" aria-labelledby="chart-title chart-desc">
+<title id="chart-title">Bastion's estimated rating compared with the reference engines</title>
+<desc id="chart-desc">Bastion is estimated at 2867 Elo (95% interval 2817 to 2916). Stash 25 is rated 2744, SF level 11 is rated 2856, SF level 13 is rated 2973, SF level 15 is rated 3070, SF level 17 is rated 3141.</desc>
+<line class="axis" x1="36" y1="226" x2="604" y2="226"/>
+<line class="axis" x1="36.0" y1="226" x2="36.0" y2="232"/>
+<text class="muted" x="36.0" y="252" font-size="14" text-anchor="middle">2400</text>
+<line class="axis" x1="99.1" y1="226" x2="99.1" y2="232"/>
+<text class="muted tick-minor" x="99.1" y="252" font-size="14" text-anchor="middle">2500</text>
+<line class="axis" x1="162.2" y1="226" x2="162.2" y2="232"/>
+<text class="muted" x="162.2" y="252" font-size="14" text-anchor="middle">2600</text>
+<line class="axis" x1="225.3" y1="226" x2="225.3" y2="232"/>
+<text class="muted tick-minor" x="225.3" y="252" font-size="14" text-anchor="middle">2700</text>
+<line class="axis" x1="288.4" y1="226" x2="288.4" y2="232"/>
+<text class="muted" x="288.4" y="252" font-size="14" text-anchor="middle">2800</text>
+<line class="axis" x1="351.6" y1="226" x2="351.6" y2="232"/>
+<text class="muted tick-minor" x="351.6" y="252" font-size="14" text-anchor="middle">2900</text>
+<line class="axis" x1="414.7" y1="226" x2="414.7" y2="232"/>
+<text class="muted" x="414.7" y="252" font-size="14" text-anchor="middle">3000</text>
+<line class="axis" x1="477.8" y1="226" x2="477.8" y2="232"/>
+<text class="muted tick-minor" x="477.8" y="252" font-size="14" text-anchor="middle">3100</text>
+<line class="axis" x1="540.9" y1="226" x2="540.9" y2="232"/>
+<text class="muted" x="540.9" y="252" font-size="14" text-anchor="middle">3200</text>
+<line class="axis" x1="604.0" y1="226" x2="604.0" y2="232"/>
+<text class="muted tick-minor" x="604.0" y="252" font-size="14" text-anchor="middle">3300</text>
+<line class="target" x1="99.1" y1="30" x2="99.1" y2="226"/>
+<text class="muted" x="106.1" y="42" font-size="14">2500 target</text>
+<line class="axis" x1="253.1" y1="220" x2="253.1" y2="211"/>
+<circle class="ref" cx="253.1" cy="226" r="5"/>
+<text x="253.1" y="206" font-size="14" text-anchor="middle">Stash 25</text>
+<line class="axis" x1="323.8" y1="220" x2="323.8" y2="183"/>
+<circle class="ref" cx="323.8" cy="226" r="5"/>
+<text x="323.8" y="178" font-size="14" text-anchor="middle">SF level 11</text>
+<line class="axis" x1="397.6" y1="220" x2="397.6" y2="155"/>
+<circle class="ref" cx="397.6" cy="226" r="5"/>
+<text x="397.6" y="150" font-size="14" text-anchor="middle">SF level 13</text>
+<line class="axis" x1="458.8" y1="220" x2="458.8" y2="211"/>
+<circle class="ref" cx="458.8" cy="226" r="5"/>
+<text x="458.8" y="206" font-size="14" text-anchor="middle">SF level 15</text>
+<line class="axis" x1="503.7" y1="220" x2="503.7" y2="183"/>
+<circle class="ref" cx="503.7" cy="226" r="5"/>
+<text x="503.7" y="178" font-size="14" text-anchor="middle">SF level 17</text>
+<rect class="band" x="299.2" y="77" width="62.5" height="18" rx="9"/>
+<circle class="me" cx="330.7" cy="86" r="8"/>
+<text x="330.7" y="66" font-size="16" font-weight="700" text-anchor="middle">Bastion ≈ 2867</text>
+</svg>
+        <div class="table-wrap"><table class="results"><caption>Match results</caption><thead><tr><th scope="col">Opponent</th><th scope="col" class="num">Rating</th><th scope="col" class="num">Games</th><th scope="col" class="num">Bastion scored</th><th scope="col" class="num">Performance</th></tr></thead><tbody><tr><td>Stash 25</td><td class="num">2744</td><td class="num">60</td><td class="num">80.0%</td><td class="num">2985</td></tr><tr><td>Stockfish level 11</td><td class="num">2856</td><td class="num">30</td><td class="num">26.7%</td><td class="num">2680</td></tr><tr><td>Stockfish level 13</td><td class="num">2973</td><td class="num">44</td><td class="num">30.7%</td><td class="num">2831</td></tr><tr><td>Stockfish level 15</td><td class="num">3070</td><td class="num">14</td><td class="num">39.3%</td><td class="num">2994</td></tr><tr><td>Stockfish level 17</td><td class="num">3141</td><td class="num">12</td><td class="num">12.5%</td><td class="num">2803</td></tr></tbody></table></div>
+      </figure>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>Bastion is open source under the MIT licence. The code, test results and build instructions are on <a href="https://github.com/husnainbh-123/Bastion">GitHub</a>.</p>
+  <p>The chess pieces and the fortress board were designed for this project.</p>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -25,3 +25,6 @@ timeout-*
 
 # Secrets
 bot/config.yml
+
+# Python
+__pycache__/
