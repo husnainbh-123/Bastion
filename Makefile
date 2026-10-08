@@ -19,12 +19,12 @@ $(EXE): $(SRC) $(wildcard src/*.h)
 
 WASM_CXX   ?= clang++
 WASM_SYSROOT ?= /usr
-WASM_SRC   := $(filter-out src/main.cpp,$(wildcard src/*.cpp))
+WASM_SRC   := $(filter-out src/main.cpp src/datagen.cpp,$(wildcard src/*.cpp))
 wasm: web/engine/bastion.wasm
 web/engine/bastion.wasm: $(WASM_SRC) $(wildcard src/*.h)
 	mkdir -p web/engine
-	$(WASM_CXX) --target=wasm32-wasi --sysroot=$(WASM_SYSROOT) -std=c++20 -O3 -DNDEBUG -DBASTION_NO_THREADS \
-	  -fno-exceptions -mexec-model=reactor -Wl,--export-dynamic -Wl,--strip-all \
+	$(WASM_CXX) --target=wasm32-wasi --sysroot=$(WASM_SYSROOT) -std=c++20 -O3 -DNDEBUG -DBASTION_NO_THREADS -DBASTION_WEB \
+	  -fno-exceptions -mexec-model=reactor -Wl,--strip-all -Wl,-z,stack-size=2097152 \
 	  $(WASM_SRC) -o $@ -lc++abi
 
 clean:
