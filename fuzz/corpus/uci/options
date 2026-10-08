@@ -1,0 +1,3 @@
+setoption name Move Overhead value 100
+setoption name Skill Level value 5
+position startpos moves e2e4 xx
