@@ -1,0 +1,65 @@
+name: Release
+
+# Push a tag such as v1.0.0 to build engine binaries and attach them to a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux binaries are linked statically so they run on older distributions too.
+          - { name: linux-x86-64-v2,   os: ubuntu-latest,  flags: "-DBASTION_ARCH=x86-64-v2 -DCMAKE_EXE_LINKER_FLAGS=-static" }
+          - { name: linux-x86-64-v3,   os: ubuntu-latest,  flags: "-DBASTION_ARCH=x86-64-v3 -DCMAKE_EXE_LINKER_FLAGS=-static" }
+          - { name: windows-x86-64-v2, os: windows-latest, flags: "" }
+          - { name: windows-x86-64-v3, os: windows-latest, flags: "-DBASTION_ARCH=x86-64-v3" }
+          - { name: macos-arm64,       os: macos-latest,   flags: "" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded ${{ matrix.flags }}
+          cmake --build build --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Package
+        shell: bash
+        run: |
+          mkdir dist
+          if [ -f build/Release/bastion.exe ]; then
+            cp build/Release/bastion.exe "dist/bastion-${{ github.ref_name }}-${{ matrix.name }}.exe"
+          else
+            cp build/bastion "dist/bastion-${{ github.ref_name }}-${{ matrix.name }}"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            Which file to download:
+            - **x86-64-v3**: most Intel and AMD processors from 2015 onwards (needs AVX2).
+            - **x86-64-v2**: older x86-64 processors.
+            - **macos-arm64**: Macs with Apple silicon.
+
+            Bastion is a UCI engine: load it in a chess GUI such as Arena, Cute Chess or Nibbler, or run it with lichess-bot.
