@@ -1,0 +1,20 @@
+# Build output
+/build/
+/build-*/
+/bastion
+/bastion.exe
+*.o
+*.obj
+*.wasm
+!web/engine/*.wasm
+
+# Testing artefacts
+/testing/
+*.pgn
+*.epd
+!tests/data/*.epd
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
