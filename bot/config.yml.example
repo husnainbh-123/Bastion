@@ -1,0 +1,79 @@
+# lichess-bot configuration for Bastion.
+#
+# 1. Copy this file to config.yml inside your lichess-bot folder.
+# 2. Paste your bot token below (never commit config.yml: the token is a password).
+# 3. Put the Bastion executable in lichess-bot/engines/ and check the name below.
+# Every setting not listed here keeps lichess-bot's default.
+
+token: "PASTE-YOUR-LICHESS-BOT-TOKEN-HERE"
+url: "https://lichess.org/"
+
+engine:
+  dir: "./engines/"
+  name: "bastion"          # use "bastion.exe" on Windows
+  protocol: "uci"
+  ponder: false            # Bastion does not think on the opponent's time
+  uci_options:
+    Hash: 256              # MB of memory for the transposition table
+    Threads: 2             # CPU threads to search with
+    Move Overhead: 100     # ms reserved per move for network lag
+
+  draw_or_resign:
+    resign_enabled: false
+    offer_draw_enabled: true
+    offer_draw_score: 0
+    offer_draw_moves: 10
+    offer_draw_pieces: 10
+
+  # Bastion plays every move itself: no opening books, cloud analysis or tablebases.
+  polyglot:
+    enabled: false
+  online_moves:
+    chessdb_book:
+      enabled: false
+    lichess_cloud_analysis:
+      enabled: false
+    lichess_opening_explorer:
+      enabled: false
+    online_egtb:
+      enabled: false
+
+abort_time: 30
+move_overhead: 1500        # extra safety margin lichess-bot keeps on the clock (ms)
+
+challenge:
+  concurrency: 1           # one game at a time; raise it on a machine with more cores
+  accept_bot: true
+  only_bot: false
+  max_increment: 20
+  min_increment: 0
+  max_base: 1800
+  min_base: 30
+  variants:
+    - standard
+    - fromPosition
+  time_controls:
+    - bullet
+    - blitz
+    - rapid
+    - classical
+  modes:
+    - casual
+    - rated
+
+greeting:
+  hello: "Hi, I'm {me}, a chess engine written from scratch in C++. Good luck!"
+  goodbye: "Good game!"
+  hello_spectators: "Hi! I'm {me}. My source code is at github.com/husnainbh-123/Bastion"
+  goodbye_spectators: "Thanks for watching!"
+
+matchmaking:
+  allow_matchmaking: false # set to true to challenge other bots when idle
+  challenge_timeout: 30
+  challenge_initial_time:
+    - 180
+    - 300
+  challenge_increment:
+    - 2
+    - 3
+  challenge_mode: "rated"
