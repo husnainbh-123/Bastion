@@ -35,7 +35,6 @@ class MovePicker {
     const Stack*    ss;
     Move            ttMove, killers[2], counter;
     int             stage;
-    int             depth;
     ExtMove*        cur;
     ExtMove*        endMoves;
     ExtMove*        endBadCaptures;

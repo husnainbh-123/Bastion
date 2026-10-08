@@ -14,8 +14,8 @@ namespace {
 constexpr int MvvValue[7] = {100, 320, 330, 500, 950, 0, 0};
 }
 
-MovePicker::MovePicker(const Position& p, Move tt, int d, const Worker& worker, const Stack* s)
-    : pos(p), w(worker), ss(s), depth(d) {
+MovePicker::MovePicker(const Position& p, Move tt, int /*depth*/, const Worker& worker, const Stack* s)
+    : pos(p), w(worker), ss(s) {
     ttMove     = tt && pos.pseudo_legal(tt) ? tt : Move::none();
     killers[0] = ss->killers[0];
     killers[1] = ss->killers[1];
@@ -30,7 +30,7 @@ MovePicker::MovePicker(const Position& p, Move tt, int d, const Worker& worker, 
 }
 
 MovePicker::MovePicker(const Position& p, Move tt, const Worker& worker, const Stack* s)
-    : pos(p), w(worker), ss(s), depth(0) {
+    : pos(p), w(worker), ss(s) {
     const bool inCheck = pos.in_check();
     ttMove     = tt && pos.pseudo_legal(tt) && (inCheck || pos.is_tactical(tt)) ? tt : Move::none();
     killers[0] = killers[1] = counter = Move::none();

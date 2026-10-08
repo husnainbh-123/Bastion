@@ -20,8 +20,6 @@ Params P;
 
 namespace {
 
-constexpr Bitboard CenterFiles = file_bb(2) | file_bb(3) | file_bb(4) | file_bb(5);
-
 template <bool Tracing>
 class Evaluator {
    public:
