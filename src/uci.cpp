@@ -17,16 +17,23 @@
 namespace bastion {
 
 extern const std::vector<std::string> BenchPositions;
+#ifndef BASTION_WEB
+void datagen(int games, std::uint64_t nodes, const std::string& file, std::uint64_t seed);
+#endif
 
 namespace UCI {
 
 namespace {
 
-Position   pos;
+Position pos;
+#ifndef BASTION_NO_THREADS
 std::mutex outputMutex;
+#endif
 
 void say(const std::string& s) {
+#ifndef BASTION_NO_THREADS
     std::lock_guard<std::mutex> lock(outputMutex);
+#endif
     std::cout << s << std::endl;
 }
 
@@ -267,7 +274,19 @@ bool handle_command(const std::string& line) {
         std::string v;
         if (is >> v) to_int(v, d);
         bench(int(std::clamp(d, 1LL, 30LL)));
-    } else
+    }
+#ifndef BASTION_WEB
+    else if (token == "datagen") {
+        long long games = 0, nodes = 0, seed = 1;
+        std::string g, n, file, sd;
+        if ((is >> g >> n >> file) && to_int(g, games) && to_int(n, nodes) && games > 0 && nodes > 0) {
+            if (is >> sd) to_int(sd, seed);
+            datagen(int(games), std::uint64_t(nodes), file, std::uint64_t(seed));
+        } else
+            say("info string usage: datagen <games> <nodes> <file> [seed]");
+    }
+#endif
+    else
         say("info string unknown command: " + token);
     return true;
 }

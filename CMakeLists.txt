@@ -15,7 +15,7 @@ set(BASTION_ARCH "" CACHE STRING "Target architecture for -march, e.g. x86-64-v2
 
 set(ENGINE_SOURCES
   src/bitboard.cpp src/position.cpp src/movegen.cpp src/evaluate.cpp src/tt.cpp
-  src/movepick.cpp src/search.cpp src/uci.cpp src/bench.cpp)
+  src/movepick.cpp src/search.cpp src/uci.cpp src/bench.cpp src/datagen.cpp src/notation.cpp)
 
 add_library(bastion_core STATIC ${ENGINE_SOURCES})
 target_include_directories(bastion_core PUBLIC src)
@@ -60,3 +60,7 @@ if(BASTION_FUZZ)
     target_link_options(${target} PRIVATE -fsanitize=fuzzer,address,undefined)
   endforeach()
 endif()
+
+# ---- Tools ----
+add_executable(tuner tools/tuner/tuner.cpp)
+target_link_libraries(tuner PRIVATE bastion_core)
