@@ -1,9 +1,20 @@
 name: Release
 
-# Push a tag such as v1.0.0 to build engine binaries and attach them to a GitHub release.
+# Builds engine binaries and attaches them to a GitHub release. Start it either by
+# pushing a tag such as v1.0.0, or from the Actions tab (Release > Run workflow),
+# which creates the tag itself.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag to create, for example v1.0.0"
+        required: true
+        default: "v1.0.0"
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: write
@@ -35,9 +46,9 @@ jobs:
         run: |
           mkdir dist
           if [ -f build/Release/bastion.exe ]; then
-            cp build/Release/bastion.exe "dist/bastion-${{ github.ref_name }}-${{ matrix.name }}.exe"
+            cp build/Release/bastion.exe "dist/bastion-$TAG-${{ matrix.name }}.exe"
           else
-            cp build/bastion "dist/bastion-${{ github.ref_name }}-${{ matrix.name }}"
+            cp build/bastion "dist/bastion-$TAG-${{ matrix.name }}"
           fi
       - uses: actions/upload-artifact@v4
         with:
@@ -54,6 +65,9 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: Bastion ${{ env.TAG }}
           files: dist/*
           generate_release_notes: true
           body: |
