@@ -48,6 +48,9 @@ pip install -r requirements.txt
    `x86-64-v3` for a computer made after about 2015, `x86-64-v2` otherwise), or
    build it yourself (see the main README).
 2. Put it in `lichess-bot/engines/` and rename it to `bastion` (`bastion.exe` on Windows).
+   On macOS and Linux, make it executable with `chmod +x engines/bastion`; on a Mac
+   that refuses to open it because it was downloaded, also run
+   `xattr -d com.apple.quarantine engines/bastion`.
 3. Copy [`config.yml.example`](config.yml.example) from this folder to
    `lichess-bot/config.yml`, paste your token into the `token:` line and, on
    Windows, change `name: "bastion"` to `name: "bastion.exe"`.

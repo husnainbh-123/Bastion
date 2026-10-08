@@ -346,7 +346,7 @@ Friederich, with every other term at zero.
 | Board logic | unit tests: hashing, check detection, move validation, SEE, draw rules, malformed FEN |
 | Memory safety | the whole test suite under AddressSanitizer and UndefinedBehaviorSanitizer |
 | Untrusted input | libFuzzer harnesses for the FEN parser and UCI commands |
-| Determinism | `bench` searches 36 positions to a fixed depth; the node count goes into every commit message and CI checks it |
+| Determinism | `bench` searches 36 positions to a fixed depth; commits that change the search record the node count in their message, and CI checks it |
 | Playing strength | games between versions (SPRT) and against reference engines (gauntlets), run with fastchess |
 | Website engine | the WebAssembly build is tested under Node before each deployment |
 
@@ -357,8 +357,9 @@ bounds, so clear results finish quickly and borderline ones take longer.
 
 **Elo** differences translate to expected scores: a player rated 100 points
 higher is expected to score about 64%. Bastion's rating was estimated from games
-against several versions of the engine Stash whose ratings on the CCRL blitz list
-are known; details and confidence intervals are in `docs/TESTING.md`.
+against reference engines with known ratings on the CCRL blitz scale (Stash 25,
+and Stockfish held back to calibrated skill levels); details and confidence
+intervals are in `docs/TESTING.md`.
 
 ## 8. The website and WebAssembly
 
@@ -393,7 +394,7 @@ the slider, multiply by a magic constant and shift: the result is a perfect hash
 of the blocker arrangement into a table of attack sets.
 
 **How do you know the move generator is correct?** Perft counts match published
-values for 27 positions (761 million leaf nodes), and unit tests cross-check
+values for 27 positions (over 800 million leaf nodes), and unit tests cross-check
 incremental hashing, check detection and move validation.
 
 **What does alpha-beta gain over minimax?** With good move ordering it searches
@@ -414,9 +415,10 @@ scores are often only bounds (fail high or fail low), so the entry records wheth
 its score is exact, a lower bound or an upper bound, and it is only used to cut
 off when it is valid for the current window.
 
-**How do you know a change makes the engine stronger?** It must win an SPRT
-against the previous version over hundreds or thousands of games. The bench node
-count proves which changes alter the search at all.
+**How do you know a change makes the engine stronger?** Play it against the
+previous version until the result is statistically clear. An SPRT stops as soon as
+it can tell a real gain from noise; small gains need thousands of games. The bench
+node count shows which changes alter the search at all.
 
 **How did you choose the evaluation weights?** Texel tuning: self-play data,
 a logistic model of the result, gradient descent on the mean squared error.
