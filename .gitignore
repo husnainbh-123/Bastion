@@ -6,7 +6,6 @@
 *.o
 *.obj
 *.wasm
-!web/engine/*.wasm
 
 # Testing artefacts
 /testing/
@@ -18,3 +17,11 @@
 .vscode/
 .idea/
 .DS_Store
+/build-fuzz/
+/web/engine/
+crash-*
+leak-*
+timeout-*
+
+# Secrets
+bot/config.yml

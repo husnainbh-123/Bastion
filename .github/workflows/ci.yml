@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Run perft, unit and bench tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  bench-signature:
+    # Every commit message records the node count of "bench". A mismatch means the
+    # search changed behaviour without the commit saying so.
+    name: Bench signature
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel
+      - name: Compare with the commit message
+        env:
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          expected=$(printf '%s\n' "$MESSAGE" | grep -oE 'Bench: [0-9]+' | tail -1 | grep -oE '[0-9]+' || true)
+          actual=$(./build/bastion bench 13 | cut -d' ' -f1)
+          echo "bench: $actual"
+          if [ -n "$expected" ] && [ "$expected" != "$actual" ]; then
+            echo "::error::Commit message says Bench: $expected but the engine produced $actual"
+            exit 1
+          fi
+
+  sanitizers:
+    name: AddressSanitizer + UndefinedBehaviorSanitizer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with sanitizers
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBASTION_SANITIZE=ON
+          cmake --build build --parallel
+      - name: Run tests under sanitizers
+        run: ctest --test-dir build --output-on-failure
+
+  fuzz:
+    name: Fuzz the FEN and UCI parsers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build libFuzzer targets
+        run: |
+          CXX=clang++ cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBASTION_FUZZ=ON
+          cmake --build build --parallel --target fuzz_fen fuzz_uci
+      - name: Fuzz for two minutes per target
+        run: |
+          cp -r fuzz/corpus /tmp/corpus
+          ./build/fuzz_fen /tmp/corpus/fen -max_total_time=120 -print_final_stats=1
+          ./build/fuzz_uci /tmp/corpus/uci -max_total_time=120 -print_final_stats=1 > /dev/null
+
+  webassembly:
+    name: WebAssembly build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install WASI toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 lld-18 wasi-libc libc++-18-dev-wasm32 libc++abi-18-dev-wasm32 libclang-rt-18-dev-wasm32
+      - name: Build bastion.wasm
+        run: make wasm WASM_CXX=clang++-18
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test the engine API under Node
+        run: node tests/wasm_test.mjs
