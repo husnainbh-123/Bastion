@@ -54,6 +54,17 @@ struct Options {
 
 void init();  // precompute reduction tables
 
+// Individual search techniques can be switched off for testing how much each
+// one is worth (see tools/ablation.sh). Set BASTION_DISABLE=nmp,lmr,... in the
+// environment; normal play always uses everything.
+enum Feature {
+    NullMove, ReverseFutility, Razoring, LateMoveReductions, LateMovePruning, Futility, SeePruning,
+    HistoryPruning, SingularExtensions, IterativeReduction, AspirationWindows, Killers, HistoryOrdering,
+    CheckExtensions, FeatureCount
+};
+extern bool Enabled[FeatureCount];
+bool        disable_features(const std::string& csv);  // returns false if a name is unknown
+
 }  // namespace Search
 
 constexpr int HistoryMax = 16384;
@@ -120,7 +131,8 @@ class Worker {
     int                        selDepth  = 0;
     int                        rootDepth = 0;
     int                        nmpMinPly = 0;
-    Move                       iterBestMove = Move::none();  // best root move of the running iteration
+    Move                       iterBestMove  = Move::none();  // best root move of the running iteration
+    Value                      iterBestValue = VALUE_NONE;
     Move                       pvTable[MAX_PLY + 1][MAX_PLY + 1];
     int                        pvLength[MAX_PLY + 1];
     std::uint64_t              rootMoveNodes[64][64];

@@ -20,7 +20,8 @@ MovePicker::MovePicker(const Position& p, Move tt, int d, const Worker& worker, 
     killers[0] = ss->killers[0];
     killers[1] = ss->killers[1];
     counter    = Move::none();
-    if ((ss - 1)->currentMove.is_ok()) {
+    if (!Search::Enabled[Search::Killers]) killers[0] = killers[1] = Move::none();
+    else if ((ss - 1)->currentMove.is_ok()) {
         Square prevSq = (ss - 1)->currentMove.to();
         counter       = w.counterMoves[pos.piece_on(prevSq)][prevSq];
     }
@@ -49,6 +50,10 @@ void MovePicker::score_captures() {
 
 void MovePicker::score_quiets() {
     const Color us = pos.side_to_move();
+    if (!Search::Enabled[Search::HistoryOrdering]) {
+        for (ExtMove* m = cur; m < endMoves; ++m) m->value = 0;
+        return;
+    }
     for (ExtMove* m = cur; m < endMoves; ++m) {
         Move   mv = m->move;
         Piece  pc = pos.moved_piece(mv);

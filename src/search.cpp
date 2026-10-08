@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 
 #include "evaluate.h"
@@ -49,7 +50,32 @@ void apply_bonus(std::int16_t& entry, int bonus) {
 
 }  // namespace
 
+bool Search::Enabled[Search::FeatureCount] = {true, true, true, true, true, true, true,
+                                               true, true, true, true, true, true, true};
+
+bool Search::disable_features(const std::string& csv) {
+    static const char* Names[FeatureCount] = {"nmp", "rfp", "razor", "lmr", "lmp", "futility", "see",
+                                             "histprune", "singular", "iir", "aspiration", "killers",
+                                             "history", "checkext"};
+    bool        ok = true;
+    std::string name;
+    for (std::size_t i = 0; i <= csv.size(); ++i) {
+        if (i < csv.size() && csv[i] != ',') {
+            name += csv[i];
+            continue;
+        }
+        if (name.empty()) continue;
+        auto it = std::find_if(std::begin(Names), std::end(Names), [&](const char* n) { return name == n; });
+        if (it == std::end(Names)) ok = false;
+        else Enabled[it - std::begin(Names)] = false;
+        name.clear();
+    }
+    return ok;
+}
+
 void Search::init() {
+    if (const char* env = std::getenv("BASTION_DISABLE")) disable_features(env);
+
     for (int d = 1; d <= MAX_PLY; ++d)
         for (int m = 1; m < MAX_MOVES; ++m) {
             double l             = std::log(d) * std::log(m);
@@ -145,7 +171,7 @@ Value Worker::search(Position& pos, Stack* ss, Value alpha, Value beta, int dept
     const bool inCheck  = pos.in_check();
 
     // Check extension: never stop searching while in check.
-    if (inCheck && depth < MAX_PLY) ++depth;
+    if (inCheck && depth < MAX_PLY && Search::Enabled[Search::CheckExtensions]) ++depth;
     if (depth <= 0) return qsearch<PvNode>(pos, ss, alpha, beta);
 
     if (PvNode) pvLength[ss->ply] = ss->ply;
@@ -183,7 +209,8 @@ Value Worker::search(Position& pos, Stack* ss, Value alpha, Value beta, int dept
     if (!PvNode && !excluded && ttHit && ttValue != VALUE_NONE && tte->depth() >= depth &&
         (tte->bound() & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER)) && pos.rule50_count() < 90) {
         // A quiet hash move that still produces a cutoff deserves credit.
-        if (ttMove && ttValue >= beta && !pos.is_tactical(ttMove) && pos.pseudo_legal(ttMove))
+        if (ttMove && ttValue >= beta && !pos.is_tactical(ttMove) && pos.pseudo_legal(ttMove) &&
+            Search::Enabled[Search::HistoryOrdering])
             apply_bonus(mainHistory[us][ttMove.from()][ttMove.to()], history_bonus(depth));
         return ttValue;
     }
@@ -217,17 +244,19 @@ Value Worker::search(Position& pos, Stack* ss, Value alpha, Value beta, int dept
 
     if (!PvNode && !inCheck && !excluded) {
         // Reverse futility pruning: far above beta at low depth, assume the opponent can't recover.
-        if (depth <= 8 && eval - 80 * (depth - improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY)
+        if (Search::Enabled[Search::ReverseFutility] && depth <= 8 && eval - 80 * (depth - improving) >= beta &&
+            eval < VALUE_MATE_IN_MAX_PLY)
             return eval;
 
         // Razoring: hopelessly below alpha, check whether captures can save us.
-        if (depth <= 3 && eval + 250 + 200 * depth <= alpha) {
+        if (Search::Enabled[Search::Razoring] && depth <= 3 && eval + 250 + 200 * depth <= alpha) {
             Value v = qsearch<false>(pos, ss, alpha, alpha + 1);
             if (v <= alpha) return v;
         }
 
         // Null move pruning: if passing still beats beta, a real move almost certainly will.
-        if (depth >= 3 && eval >= beta && ss->staticEval >= beta - 20 * depth + 160 &&
+        if (Search::Enabled[Search::NullMove] && depth >= 3 && eval >= beta &&
+            ss->staticEval >= beta - 20 * depth + 160 &&
             (ss - 1)->currentMove != Move::null() && pos.has_non_pawn_material(us) && ss->ply >= nmpMinPly &&
             beta > VALUE_MATED_IN_MAX_PLY) {
             int R = 4 + depth / 3 + std::min((eval - beta) / 200, 3);
@@ -253,7 +282,8 @@ Value Worker::search(Position& pos, Stack* ss, Value alpha, Value beta, int dept
     }
 
     // Internal iterative reduction: without a hash move this node is probably less important.
-    if (!inCheck && !ttMove && depth >= 4 && (PvNode || cutNode)) --depth;
+    if (Search::Enabled[Search::IterativeReduction] && !inCheck && !ttMove && depth >= 4 && (PvNode || cutNode))
+        --depth;
 
     // --- Move loop ---
     MovePicker mp(pos, ttMove, depth, *this, ss);
@@ -284,24 +314,26 @@ Value Worker::search(Position& pos, Stack* ss, Value alpha, Value beta, int dept
             const int lmrDepth = std::max(0, newDepth - Reductions[!tactical][depth][std::min(moveCount, MAX_MOVES - 1)]);
             if (!tactical) {
                 // Late move pruning: after enough quiet moves, the rest are unlikely to matter.
-                if (moveCount >= (3 + depth * depth) / (2 - improving)) {
+                if (Search::Enabled[Search::LateMovePruning] && moveCount >= (3 + depth * depth) / (2 - improving)) {
                     skipQuiets = true;
                     continue;
                 }
                 // Futility pruning: even a good quiet move won't lift us to alpha.
-                if (!inCheck && !givesCheck && lmrDepth <= 8 && ss->staticEval + 110 + 100 * lmrDepth <= alpha)
+                if (Search::Enabled[Search::Futility] && !inCheck && !givesCheck && lmrDepth <= 8 &&
+                    ss->staticEval + 110 + 100 * lmrDepth <= alpha)
                     continue;
                 // History pruning: moves that have consistently failed before.
-                if (lmrDepth <= 3 && history < -2500 * depth) continue;
+                if (Search::Enabled[Search::HistoryPruning] && lmrDepth <= 3 && history < -2500 * depth) continue;
                 // SEE pruning: quiet moves that hang material.
-                if (!pos.see_ge(m, -25 * lmrDepth * lmrDepth)) continue;
-            } else if (depth <= 8 && !pos.see_ge(m, -95 * depth))
+                if (Search::Enabled[Search::SeePruning] && !pos.see_ge(m, -25 * lmrDepth * lmrDepth)) continue;
+            } else if (Search::Enabled[Search::SeePruning] && depth <= 8 && !pos.see_ge(m, -95 * depth))
                 continue;  // losing captures at low depth
         }
 
         // --- Singular extension: if the hash move is much better than all alternatives, search it deeper ---
         int extension = 0;
-        if (!rootNode && m == ttMove && !excluded && depth >= 7 && ttValue != VALUE_NONE &&
+        if (Search::Enabled[Search::SingularExtensions] && !rootNode && m == ttMove && !excluded && depth >= 7 &&
+            ttValue != VALUE_NONE &&
             !is_mate_score(ttValue) && (tte->bound() & BOUND_LOWER) && tte->depth() >= depth - 3 &&
             ss->ply < 2 * rootDepth) {
             const Value singularBeta  = ttValue - 2 * depth;
@@ -327,7 +359,8 @@ Value Worker::search(Position& pos, Stack* ss, Value alpha, Value beta, int dept
         Value value = -VALUE_INFINITE;
 
         // Late move reductions: search later moves shallower with a null window first.
-        if (depth >= 2 && moveCount > 1 + rootNode && (!tactical || !ttPv)) {
+        if (Search::Enabled[Search::LateMoveReductions] && depth >= 2 && moveCount > 1 + rootNode &&
+            (!tactical || !ttPv)) {
             int r = Reductions[!tactical][depth][std::min(moveCount, MAX_MOVES - 1)];
             if (!tactical) {
                 r += !improving;
@@ -361,7 +394,7 @@ Value Worker::search(Position& pos, Stack* ss, Value alpha, Value beta, int dept
             if (value > alpha) {
                 best = m;
                 if (PvNode) update_pv(ss->ply, m);
-                if (rootNode) iterBestMove = m;
+                if (rootNode) iterBestMove = m, iterBestValue = value;
                 if (value >= beta) break;  // fail high: the opponent will avoid this line
                 alpha = value;
             }
@@ -512,12 +545,13 @@ void Worker::iterative_deepening() {
         if (Threads.limits.depth && rootDepth > Threads.limits.depth) break;
         if (Threads.stopFlag.load(std::memory_order_relaxed)) break;
 
-        selDepth     = 0;
-        iterBestMove = Move::none();
+        selDepth      = 0;
+        iterBestMove  = Move::none();
+        iterBestValue = VALUE_NONE;
 
         // Aspiration window around the previous score: narrow windows are faster.
         Value alpha = -VALUE_INFINITE, beta = VALUE_INFINITE, delta = 0, value = 0;
-        if (rootDepth >= 4 && completedDepth) {
+        if (rootDepth >= 4 && completedDepth && Search::Enabled[Search::AspirationWindows]) {
             delta = 12 + bestValue * bestValue / 15000;
             alpha = std::max(bestValue - delta, -VALUE_INFINITE);
             beta  = std::min(bestValue + delta, VALUE_INFINITE);
@@ -542,9 +576,20 @@ void Worker::iterative_deepening() {
 
         if (Threads.stopFlag.load(std::memory_order_relaxed)) {
             // An unfinished iteration can still have found a better root move.
-            if (iterBestMove && completedDepth) {
+            if (iterBestMove && completedDepth && iterBestMove != bestMove) {
                 bestMove = iterBestMove;
                 bestPv.assign(pvTable[0], pvTable[0] + pvLength[0]);
+                if (isMain && Threads.onInfo && !Threads.options.quiet) {
+                    Search::Info info;
+                    info.depth    = rootDepth;
+                    info.seldepth = selDepth;
+                    info.score    = iterBestValue;
+                    info.nodes    = Threads.nodes_searched();
+                    info.timeMs   = Threads.elapsed();
+                    info.hashfull = TT.hashfull();
+                    info.pv       = bestPv;
+                    Threads.onInfo(info);
+                }
             }
             break;
         }
