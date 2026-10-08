@@ -1,6 +1,6 @@
 // tuner.cpp: Texel-style evaluation tuner.
 //
-//   tuner <data file> [max positions] [epochs] [threads] > src/eval_params.h
+//   tuner <data file> [max positions] [epochs] [threads] [min count] > src/eval_params.h
 //
 // The data file holds "FEN | score | result" lines written by the engine's
 // "datagen" command. For every position we record which evaluation terms are
@@ -8,7 +8,9 @@
 // the weights. We then minimise the mean squared error between
 //     sigmoid(K * eval)   and   the game result (1, 0.5 or 0)
 // with full-batch gradient descent (Adam). K is fitted first so that the
-// evaluation scale stays in centipawns.
+// evaluation scale stays in centipawns. Weights used in fewer than [min count]
+// positions keep their starting value: a handful of examples is not enough to
+// learn from, and fitting them anyway produces extreme values.
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -39,6 +41,7 @@ struct Entry {
 };
 
 std::vector<Entry>         entries;
+std::vector<int>           occurrences;  // positions in which each weight appears
 std::vector<std::uint16_t> featIndex;
 std::vector<std::int8_t>   featCoeff;
 
@@ -198,6 +201,8 @@ int main(int argc, char** argv) {
     const std::size_t maxPositions = argc > 2 ? std::stoull(argv[2]) : 50'000'000;
     const int         epochs       = argc > 3 ? std::stoi(argv[3]) : 2000;
     const int         threads      = argc > 4 ? std::stoi(argv[4]) : 2;
+    const int         minCount     = argc > 5 ? std::stoi(argv[5]) : 100;
+    occurrences.assign(N, 0);
 
     Eval::init();
     const Score* base = reinterpret_cast<const Score*>(&Eval::P);
@@ -227,6 +232,7 @@ int main(int argc, char** argv) {
         for (int i = 0; i < N; ++i) {
             int c = trace.coeff[i][WHITE] - trace.coeff[i][BLACK];
             if (c) {
+                ++occurrences[i];
                 featIndex.push_back(std::uint16_t(i));
                 featCoeff.push_back(std::int8_t(std::clamp(c, -127, 127)));
             }
@@ -241,6 +247,10 @@ int main(int argc, char** argv) {
                  lines, double(featIndex.size()) / std::max<std::size_t>(1, entries.size()), mismatches);
     if (entries.empty()) return 1;
 
+    int frozen = 0;
+    for (int i = 0; i < N; ++i) frozen += occurrences[i] < minCount;
+    std::fprintf(stderr, "%d of %d weights appear in fewer than %d positions and stay fixed\n", frozen, N, minCount);
+
     const double k      = fit_k(threads);
     const double before = total_error(k, threads);
     std::fprintf(stderr, "K = %.4f, initial error %.6f\n", k, before);
@@ -252,6 +262,7 @@ int main(int argc, char** argv) {
     for (int epoch = 1; epoch <= epochs; ++epoch) {
         gradient(k, threads, gmg, geg);
         for (int i = 0; i < 2 * N; ++i) {
+            if (occurrences[i % N] < minCount) continue;
             double  g = i < N ? gmg[i] : geg[i - N];
             double& p = i < N ? mg[i] : eg[i - N];
             m1[i]     = beta1 * m1[i] + (1 - beta1) * g;
